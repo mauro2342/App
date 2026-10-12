@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <link rel="manifest"
+  href="manifest.json">
+<meta charset="UTF-8">
+<title>Chi e Cosa - Agenda Semplice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chi e Cosa">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f0f7ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" id="touch-icon" href="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#f0f7ff; --surface:#ffffff; --surface2:#e4f0fb; --line:#cddff0;
+  --ink:#0f172a; --muted:#475569;
+  --accent:#0369a1; --accent-ink:#ffffff; --accent-soft:#d9ecfc;
+  --ok:#0f766e; --ok-ink:#ffffff; --ok-soft:#d3f2ec;
+  --warn:#92400e; --warn-soft:#fdeccb;
+  --danger:#b91c1c; --done:#64748b; --wa:#15803d;
+  --av-bg:88%; --av-fg:28%;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1220; --surface:#131c2e; --surface2:#1b2740; --line:#26344f;
+    --ink:#e8eef8; --muted:#a3b1c6;
+    --accent:#38a9ec; --accent-ink:#04202f; --accent-soft:#12324d;
+    --ok:#5eead4; --ok-ink:#04201d; --ok-soft:#0f3a38;
+    --warn:#fbbf24; --warn-soft:#3a2d0c;
+    --danger:#fca5a5; --done:#8190a6; --wa:#4ade80;
+    --av-bg:26%; --av-fg:84%;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --surface:#131c2e; --surface2:#1b2740; --line:#26344f;
+  --ink:#e8eef8; --muted:#a3b1c6;
+  --accent:#38a9ec; --accent-ink:#04202f; --accent-soft:#12324d;
+  --ok:#5eead4; --ok-ink:#04201d; --ok-soft:#0f3a38;
+  --warn:#fbbf24; --warn-soft:#3a2d0c;
+  --danger:#fca5a5; --done:#8190a6; --wa:#4ade80;
+  --av-bg:26%; --av-fg:84%;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg); scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-tap-highlight-color:transparent; -webkit-text-size-adjust:100%;
+}
+button{font:inherit; color:inherit}
+.app{max-width:520px; margin:0 auto; padding:0 14px 110px}
+.i{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none}
+
+/* Intestazione */
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 2px 10px}
+.brand{display:flex; align-items:center; gap:12px; min-width:0}
+.logo{width:42px; height:42px; border-radius:13px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; flex:none}
+.logo .i{width:24px; height:24px}
+h1{margin:0; font-size:1.3rem; line-height:1.1; letter-spacing:-.01em}
+.tagline{margin:2px 0 0; font-size:.8rem; color:var(--muted)}
+.chip-btn{border:1.5px solid var(--accent); color:var(--accent); background:transparent; border-radius:999px; padding:8px 16px; font-weight:700; cursor:pointer; min-height:40px}
+
+/* Settimana */
+.weekbar{display:flex; align-items:center; justify-content:space-between; margin:6px 0 8px}
+.month{font-weight:700; text-transform:capitalize}
+.sq{width:44px; height:44px; border-radius:50%; border:0; background:var(--surface2); display:grid; place-items:center; cursor:pointer}
+.week{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+.day{
+  border:1.5px solid var(--line); background:var(--surface); border-radius:14px; padding:8px 0 7px;
+  display:flex; flex-direction:column; align-items:center; gap:1px; min-height:66px; cursor:pointer; color:var(--ink);
+}
+.day small{font-size:.74rem; color:var(--muted); text-transform:capitalize}
+.day b{font-size:1.15rem; line-height:1.2}
+.day .dot{width:6px; height:6px; border-radius:50%; background:transparent; margin-top:2px}
+.day.has .dot{background:var(--accent)}
+.day.tod:not(.sel){border-color:var(--accent)}
+.day.sel{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.day.sel small{color:inherit; opacity:.92}
+.day.sel.has .dot{background:var(--accent-ink)}
+
+/* Titolo del giorno */
+.dayhead{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:20px 2px 12px}
+.dayhead h2{margin:0; font-size:1.65rem; line-height:1.1; letter-spacing:-.015em}
+.dayhead p{margin:3px 0 0; color:var(--muted); font-size:.95rem}
+.count{font-size:.9rem; font-weight:600; color:var(--muted); text-align:right}
+
+.banner{
+  display:flex; align-items:center; gap:12px; background:var(--warn-soft); border:1.5px solid var(--warn);
+  border-radius:16px; padding:12px; margin:14px 0 0;
+}
+.banner p{margin:0; flex:1; font-size:.92rem; font-weight:600}
+.banner button{background:var(--warn); color:var(--warn-soft); border:0; border-radius:12px; padding:10px 12px; font-weight:700; cursor:pointer; min-height:44px}
+
+/* Impegni */
+.task{display:grid; grid-template-columns:52px 1fr; gap:10px; margin-bottom:12px}
+.time{font-weight:800; font-size:1.05rem; padding-top:15px; text-align:right; font-variant-numeric:tabular-nums}
+.card{
+  background:var(--surface); border:1px solid var(--line); border-left:6px solid var(--accent);
+  border-radius:16px; padding:12px;
+}
+.task[data-s="conf"] .card{border-left-color:var(--ok)}
+.task[data-s="done"] .card{border-left-color:var(--done); background:transparent}
+.main{display:grid; grid-template-columns:36px 1fr; gap:10px; align-items:start}
+.tick{
+  width:36px; height:36px; border-radius:50%; border:2px solid var(--muted); background:transparent;
+  color:transparent; display:grid; place-items:center; padding:0; cursor:pointer;
+}
+.task[data-s="done"] .tick{background:var(--ok); border-color:var(--ok); color:var(--ok-ink)}
+.body{cursor:pointer; min-width:0}
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:5px}
+.chip{font-size:.78rem; font-weight:700; border-radius:999px; padding:2px 10px}
+.chip.next{background:var(--warn-soft); color:var(--warn)}
+.chip.conf{background:var(--ok-soft); color:var(--ok)}
+.title{margin:0; font-size:1.1rem; line-height:1.3; font-weight:700; overflow-wrap:anywhere}
+.task[data-s="done"] .title{text-decoration:line-through; color:var(--done)}
+.meta{display:flex; align-items:center; gap:6px; margin:4px 0 0; color:var(--muted); font-size:.95rem}
+.meta .i{width:17px; height:17px}
+.notes{
+  margin:8px 0 0; font-size:.92rem; color:var(--muted);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.acts{display:flex; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line)}
+.act{
+  flex:1; min-height:46px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-weight:700; font-size:.95rem; text-decoration:none; border:1.5px solid var(--line); background:var(--surface2); color:var(--ink); cursor:pointer;
+}
+.act.call{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.act.wa{color:var(--wa)}
+
+.empty{text-align:center; border:2px dashed var(--line); border-radius:20px; padding:36px 18px; margin-top:8px; color:var(--muted)}
+.empty .big{width:56px; height:56px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; margin:0 auto 12px}
+.empty h3{margin:0 0 4px; color:var(--ink); font-size:1.05rem}
+.empty p{margin:0 0 16px; font-size:.92rem}
+.btn{
+  min-height:50px; padding:0 18px; border-radius:14px; border:1.5px solid var(--line); background:var(--surface2);
+  color:var(--ink); font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.btn.danger{background:transparent; border-color:var(--danger); color:var(--danger)}
+
+/* Rubrica */
+.searchbox{position:relative; margin:8px 0 10px}
+.searchbox .i{position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted)}
+.searchbox input{padding-left:44px}
+.letter{
+  position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); z-index:2;
+  padding:8px 4px 4px; font-weight:800; color:var(--accent); font-size:.95rem;
+}
+.contact{
+  display:grid; grid-template-columns:48px 1fr; gap:12px; align-items:center;
+  background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px; margin:6px 0;
+}
+.avatar{
+  width:48px; height:48px; border-radius:50%; display:grid; place-items:center; font-weight:800;
+  background:hsl(var(--h) 60% var(--av-bg)); color:hsl(var(--h) 55% var(--av-fg));
+}
+.cinfo{min-width:0; cursor:pointer}
+.cinfo b{display:block; font-size:1.05rem; overflow-wrap:anywhere}
+.cinfo span{display:block; font-size:.9rem; color:var(--muted); overflow-wrap:anywhere}
+.cinfo .next{color:var(--accent); font-weight:600}
+.cacts{grid-column:1 / -1; display:flex; gap:8px}
+.cacts .act{min-height:42px; font-size:.9rem}
+
+/* Barra inferiore */
+nav{
+  position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--surface); border-top:1px solid var(--line);
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));
+}
+.navin{max-width:520px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px}
+.nb{
+  background:none; border:0; display:flex; flex-direction:column; align-items:center; gap:3px; min-height:58px;
+  font-size:.78rem; font-weight:600; color:var(--muted); cursor:pointer; border-radius:14px; padding-top:6px;
+}
+.nb .pill{width:58px; height:32px; border-radius:16px; display:grid; place-items:center}
+.nb[aria-current="page"]{color:var(--accent)}
+.nb[aria-current="page"] .pill{background:var(--accent-soft)}
+.nb.add{color:var(--ink)}
+.nb.add .pill{background:var(--accent); color:var(--accent-ink)}
+
+.count .chip-btn{margin-top:6px; min-height:38px; padding:6px 14px; font-size:.9rem}
+.task.dim{opacity:.4}
+.tick.pick{border-radius:9px}
+.task[data-s="done"] .tick.pick{background:transparent; border-color:var(--accent); color:transparent}
+.task[data-s="done"] .tick.pick.on{background:var(--accent); color:var(--accent-ink)}
+.selbar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--surface); border-top:1px solid var(--line); padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}
+.selhint{max-width:520px; margin:0 auto 8px; font-size:.88rem; color:var(--muted); text-align:center}
+.selbar > div{max-width:520px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.btn:disabled{opacity:.45; cursor:default}
+.btn.danger.solid{background:var(--danger); border-color:var(--danger); color:var(--surface)}
+
+/* Schede di inserimento */
+dialog{
+  border:0; padding:0; background:var(--surface); color:var(--ink); width:min(520px,100%); max-width:100%;
+  max-height:92vh; overflow-y:auto; margin:auto auto 0; border-radius:24px 24px 0 0;
+}
+dialog::backdrop{background:rgba(2,8,23,.6)}
+.sheet{padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px}
+.sheet-head h2{margin:0; font-size:1.3rem}
+label.f{display:block; font-weight:600; font-size:.92rem; margin:14px 0 6px}
+input,textarea{
+  width:100%; min-height:48px; font:inherit; font-size:16px; padding:12px 14px; border:1.5px solid var(--line);
+  border-radius:12px; background:var(--bg); color:var(--ink);
+}
+input[type="date"],input[type="time"]{-webkit-appearance:none; appearance:none; min-width:0}
+textarea{min-height:88px; resize:vertical}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.seg{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+.opt{position:relative; display:block}
+.opt input{position:absolute; opacity:0; width:1px; height:1px; min-height:0; padding:0; border:0}
+.opt span{
+  display:block; text-align:center; padding:13px 4px; border:1.5px solid var(--line); border-radius:12px;
+  background:var(--bg); font-weight:600; font-size:.92rem; cursor:pointer;
+}
+.opt input:checked + span{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.opt input:focus-visible + span{outline:3px solid var(--accent); outline-offset:2px}
+.sheet-acts{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px}
+.sheet .btn.danger{width:100%; margin-top:10px}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+@media (prefers-reduced-motion: no-preference){
+  .card,.day,.contact{transition:background-color .15s,border-color .15s}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18m-12 6 2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-late" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo"><svg class="i"><use href="#i-cal"/></svg></div>
+      <div>
+        <h1>Chi e Cosa</h1>
+        <p class="tagline">Chi devi incontrare, cosa devi fare</p>
+      </div>
+    </div>
+    <button class="chip-btn" id="btn-today" hidden>Oggi</button>
+  </header>
+
+  <!-- AGENDA -->
+  <section id="tab-agenda" aria-label="Agenda">
+    <div class="weekbar">
+      <button class="sq" id="wk-prev" aria-label="Settimana precedente"><svg class="i"><use href="#i-left"/></svg></button>
+      <div class="month" id="month"></div>
+      <button class="sq" id="wk-next" aria-label="Settimana successiva"><svg class="i"><use href="#i-right"/></svg></button>
+    </div>
+    <div class="week" id="week"></div>
+
+    <div class="dayhead">
+      <div>
+        <h2 id="day-title"></h2>
+        <p id="day-sub"></p>
+      </div>
+      <div class="count"><div id="day-count"></div><button class="chip-btn" id="btn-select" hidden>Seleziona</button></div>
+    </div>
+
+    <div class="banner" id="banner" hidden>
+      <svg class="i"><use href="#i-late"/></svg>
+      <p id="banner-text"></p>
+      <button id="btn-move">Sposta a oggi</button>
+    </div>
+
+    <div id="tasks" style="margin-top:14px"></div>
+    <div class="empty" id="empty" hidden>
+      <div class="big"><svg class="i"><use href="#i-cal"/></svg></div>
+      <h3>Nessun impegno in questo giorno</h3>
+      <p>Aggiungi un appuntamento o un compito.</p>
+      <button class="btn primary" data-new="task"><svg class="i"><use href="#i-plus"/></svg>Nuovo impegno</button>
+    </div>
+  </section>
+
+  <!-- RUBRICA -->
+  <section id="tab-contacts" aria-label="Rubrica" hidden>
+    <div class="dayhead"><div><h2>Rubrica</h2><p id="ccount"></p></div></div>
+    <div class="searchbox">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input type="search" id="csearch" placeholder="Cerca per nome, telefono o azienda" aria-label="Cerca contatto">
+    </div>
+    <div id="contacts"></div>
+    <div class="empty" id="cempty" hidden>
+      <div class="big"><svg class="i"><use href="#i-users"/></svg></div>
+      <h3>Nessun contatto trovato</h3>
+      <p>Aggiungi le persone che devi incontrare per chiamarle in un tocco.</p>
+      <button class="btn primary" data-new="contact"><svg class="i"><use href="#i-plus"/></svg>Nuovo contatto</button>
+    </div>
+  </section>
+</div>
+
+<nav aria-label="Navigazione principale">
+  <div class="navin">
+    <button class="nb" id="nav-agenda" aria-current="page"><span class="pill"><svg class="i"><use href="#i-cal"/></svg></span>Agenda</button>
+    <button class="nb add" id="nav-add" aria-label="Nuovo impegno"><span class="pill"><svg class="i"><use href="#i-plus"/></svg></span><span id="add-label">Nuovo</span></button>
+    <button class="nb" id="nav-contacts"><span class="pill"><svg class="i"><use href="#i-users"/></svg></span>Rubrica</button>
+  </div>
+</nav>
+
+<!-- Conferma eliminazione -->
+<dialog id="dlg-confirm" aria-labelledby="k-msg">
+  <div class="sheet">
+    <h2 id="k-msg" style="margin:0 0 16px; font-size:1.15rem"></h2>
+    <div class="sheet-acts" style="margin-top:0">
+      <button type="button" class="btn" id="k-no">Annulla</button>
+      <button type="button" class="btn danger solid" id="k-ok">Elimina</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Barra di eliminazione impegni completati -->
+<div class="selbar" id="selbar" hidden>
+  <p class="selhint">Tocca gli impegni completati da eliminare</p>
+  <div>
+    <button type="button" class="btn" id="sel-cancel">Annulla</button>
+    <button type="button" class="btn danger solid" id="sel-del" disabled>Elimina</button>
+  </div>
+</div>
+
+<!-- Scheda impegno -->
+<dialog id="dlg-task" aria-labelledby="tt">
+  <form class="sheet" id="form-task" autocomplete="off">
+    <div class="sheet-head">
+      <h2 id="tt">Nuovo impegno</h2>
+      <button type="button" class="sq" data-close aria-label="Chiudi"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <label class="f" for="t-title">Cosa</label>
+    <input id="t-title" required placeholder="Es. Incontro di lavoro">
+    <div class="grid2">
+      <div><label class="f" for="t-date">Data</label><input type="date" id="t-date" required></div>
+      <div><label class="f" for="t-time">Orario</label><input type="time" id="t-time" required></div>
+    </div>
+    <label class="f" for="t-client">Chi</label>
+    <input id="t-client" list="clist" placeholder="Es. Mario Rossi">
+    <datalist id="clist"></datalist>
+    <label class="f" for="t-phone">Telefono (facoltativo)</label>
+    <input type="tel" id="t-phone" inputmode="tel" placeholder="Es. 333 1234567">
+    <div class="f" style="font-weight:600;font-size:.92rem;margin:14px 0 6px" id="st-label">Stato</div>
+    <div class="seg" role="radiogroup" aria-labelledby="st-label">
+      <label class="opt"><input type="radio" name="t-status" value="Da Fare" checked><span>Da fare</span></label>
+      <label class="opt"><input type="radio" name="t-status" value="Confermato"><span>Confermato</span></label>
+      <label class="opt"><input type="radio" name="t-status" value="Completato"><span>Completato</span></label>
+    </div>
+    <label class="f" for="t-notes">Note</label>
+    <textarea id="t-notes" placeholder="Dettagli, indirizzo, promemoria"></textarea>
+    <div class="sheet-acts">
+      <button type="button" class="btn" data-close>Annulla</button>
+      <button type="submit" class="btn primary">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Scheda contatto -->
+<dialog id="dlg-contact" aria-labelledby="ct">
+  <form class="sheet" id="form-contact" autocomplete="off">
+    <div class="sheet-head">
+      <h2 id="ct">Nuovo contatto</h2>
+      <button type="button" class="sq" data-close aria-label="Chiudi"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <label class="f" for="c-name">Nome e cognome</label>
+    <input id="c-name" required placeholder="Es. Giuseppe Verdi">
+    <label class="f" for="c-phone">Telefono</label>
+    <input type="tel" id="c-phone" inputmode="tel" required placeholder="Es. 340 1234567">
+    <label class="f" for="c-company">Azienda o categoria</label>
+    <input id="c-company" placeholder="Es. Fornitore, Consulente">
+    <div class="sheet-acts">
+      <button type="button" class="btn" data-close>Annulla</button>
+      <button type="submit" class="btn primary">Salva</button>
+    </div>
+    <button type="button" class="btn danger" id="c-del" hidden>Elimina contatto</button>
+  </form>
+</dialog>
+
+<script>
+(function(){
+  var TK='agenda_tasks', CK='agenda_contacts';
+  var $=function(id){return document.getElementById(id)};
+  function rd(k,fb){try{var r=localStorage.getItem(k); return r===null?fb:JSON.parse(r);}catch(e){return fb;}}
+  function wr(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+  function p2(n){return (n<10?'0':'')+n}
+  function key(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
+  function fromKey(s){var a=s.split('-'); return new Date(+a[0],+a[1]-1,+a[2]);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function ico(n){return '<svg class="i" aria-hidden="true"><use href="#i-'+n+'"/></svg>';}
+  function nowT(){var n=new Date(); return p2(n.getHours())+':'+p2(n.getMinutes());}
+  function find(a,id){for(var i=0;i<a.length;i++){if(a[i].id===id) return a[i];} return null;}
+  function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+  function tel(p){return String(p).replace(/[^\d+]/g,'');}
+  function waNum(p){
+    var s=String(p).trim(), d=s.replace(/\D/g,'');
+    if(s.charAt(0)==='+') return d;
+    if(d.indexOf('00')===0) return d.slice(2);
+    if(d.charAt(0)==='3' && d.length<=10) return '39'+d;
+    return d;
+  }
+
+  // Dati (stessi nomi di archiviazione della versione precedente)
+  var tasks=rd(TK,null), contacts=rd(CK,null);
+  if(!tasks){
+    tasks=[
+      {id:'1',title:'Incontro preliminare progetto',date:key(new Date()),time:'10:30',client:'Marco Bianchi',phone:'3381234567',status:'Da Fare',notes:'Portare i campioni di prova e il contratto.'},
+      {id:'2',title:'Conferma ordine fornitura',date:key(new Date()),time:'15:00',client:'Elena Neri',phone:'3499876543',status:'Confermato',notes:'Verificare disponibilita in magazzino.'}
+    ];
+    wr(TK,tasks);
+  }
+  if(!contacts){
+    contacts=[
+      {id:'c1',name:'Marco Bianchi',phone:'3381234567',company:'Studio Design'},
+      {id:'c2',name:'Elena Neri',phone:'3499876543',company:'Logistica & Co'},
+      {id:'c3',name:'Roberto Esposito',phone:'3205551234',company:'Cliente Privato'}
+    ];
+    wr(CK,contacts);
+  }
+  function save(){wr(TK,tasks); wr(CK,contacts);}
+
+  var cur=new Date(); cur.setHours(0,0,0,0);
+  var tab='agenda', editT=null, editC=null;
+  var selMode=false, picked={};
+  function syncSel(){
+    var on=selMode && tab==='agenda';
+    $('selbar').hidden=!on;
+    document.querySelector('nav').hidden=on;
+    var n=Object.keys(picked).length;
+    $('sel-del').disabled=!n;
+    $('sel-del').textContent=n?'Elimina ('+n+')':'Elimina';
+  }
+
+  /* ---------- Agenda ---------- */
+  function renderWeek(){
+    var d=new Date(cur), dow=(d.getDay()+6)%7, selK=key(cur), todayK=key(new Date());
+    d.setDate(d.getDate()-dow);
+    var h='';
+    for(var i=0;i<7;i++){
+      var k=key(d);
+      var has=tasks.some(function(t){return t.date===k && t.status!=='Completato';});
+      h+='<button class="day'+(k===selK?' sel':'')+(k===todayK?' tod':'')+(has?' has':'')+'" data-date="'+k+'" aria-pressed="'+(k===selK)+'" aria-label="'+esc(d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}))+'">'
+        +'<small>'+esc(d.toLocaleDateString('it-IT',{weekday:'short'}))+'</small><b>'+d.getDate()+'</b><span class="dot"></span></button>';
+      d.setDate(d.getDate()+1);
+    }
+    $('week').innerHTML=h;
+    $('month').textContent=cur.toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+  }
+
+  function taskCard(t,isNext){
+    var s=t.status==='Completato'?'done':(t.status==='Confermato'?'conf':'todo');
+    var chips='';
+    if(isNext) chips+='<span class="chip next">Prossimo</span>';
+    if(s==='conf') chips+='<span class="chip conf">Confermato</span>';
+    var h='<article class="task'+(selMode&&s!=='done'?' dim':'')+'" data-s="'+s+'" data-id="'+esc(t.id)+'"><div class="time">'+esc(t.time)+'</div><div class="card"><div class="main">'
+      +(selMode&&s==='done'
+        ?'<button class="tick pick'+(picked[t.id]?' on':'')+'" data-act="pick" aria-pressed="'+(!!picked[t.id])+'" aria-label="Seleziona impegno completato">'+ico('check')+'</button>'
+        :'<button class="tick" data-act="toggle" aria-label="'+(s==='done'?'Riapri impegno':'Segna come completato')+'">'+ico('check')+'</button>')
+      +'<div class="body" data-act="edit" role="button" tabindex="0">'
+      +(chips?'<div class="chips">'+chips+'</div>':'')
+      +'<h3 class="title">'+esc(t.title)+'</h3>'
+      +(t.client?'<p class="meta">'+ico('user')+esc(t.client)+'</p>':'')
+      +(t.notes?'<p class="notes">'+esc(t.notes)+'</p>':'')
+      +'</div></div>';
+    if(t.phone){
+      h+='<div class="acts"><a class="act call" href="tel:'+esc(tel(t.phone))+'">'+ico('phone')+'Chiama</a>'
+        +'<a class="act wa" href="https://wa.me/'+waNum(t.phone)+'" target="_blank" rel="noopener">'+ico('chat')+'WhatsApp</a></div>';
+    }
+    return h+'</div></article>';
+  }
+
+  function renderAgenda(){
+    var todayK=key(new Date()), selK=key(cur);
+    renderWeek();
+
+    var diff=Math.round((cur-fromKey(todayK))/864e5);
+    var wd=cur.toLocaleDateString('it-IT',{weekday:'long'});
+    var full=cur.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+    var rel=diff===0?'Oggi':diff===1?'Domani':diff===-1?'Ieri':null;
+    $('day-title').textContent=rel||cap(wd);
+    $('day-sub').textContent=rel?(wd+' '+full):full;
+    $('btn-today').hidden=(selK===todayK);
+
+    var day=tasks.filter(function(t){return t.date===selK;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    var done=day.filter(function(t){return t.status==='Completato';}).length;
+    var todo=day.length-done;
+    $('day-count').textContent=!day.length?'':(todo+' da fare'+(done?', '+done+(done===1?' completato':' completati'):''));
+
+    var doneIds={};
+    day.forEach(function(t){if(t.status==='Completato') doneIds[t.id]=1;});
+    Object.keys(picked).forEach(function(id){if(!doneIds[id]) delete picked[id];});
+    if(!done) selMode=false;
+    $('btn-select').hidden=(!done||selMode);
+    syncSel();
+
+    var nextId=null;
+    if(selK===todayK){
+      var n=day.filter(function(t){return t.status!=='Completato' && t.time>=nowT();})[0];
+      if(n) nextId=n.id;
+    }
+    $('tasks').innerHTML=day.map(function(t){return taskCard(t,t.id===nextId);}).join('');
+    $('empty').hidden=day.length>0;
+
+    var late=tasks.filter(function(t){return t.date<todayK && t.status!=='Completato';}).length;
+    $('banner').hidden=!late;
+    if(late) $('banner-text').textContent=late===1?'1 impegno non completato nei giorni scorsi':late+' impegni non completati nei giorni scorsi';
+  }
+
+  function changeDate(n){cur.setDate(cur.getDate()+n); renderAgenda();}
+
+  /* ---------- Rubrica ---------- */
+  function hue(name){var h=0; for(var i=0;i<name.length;i++){h=(h*31+name.charCodeAt(i))%90;} return 170+h;}
+  function initials(name){
+    var p=name.trim().split(/\s+/);
+    return ((p[0]||'').charAt(0)+(p.length>1?p[p.length-1].charAt(0):'')).toUpperCase();
+  }
+  function nextFor(name){
+    var n=name.toLowerCase(), nk=key(new Date()), nt=nowT();
+    var c=tasks.filter(function(t){
+      return t.client && t.client.toLowerCase()===n && t.status!=='Completato' && (t.date>nk || (t.date===nk && t.time>=nt));
+    }).sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time);});
+    if(!c.length) return '';
+    var t=c[0], tk=key(new Date()), tm=new Date(); tm.setDate(tm.getDate()+1);
+    var when=t.date===tk?'oggi':(t.date===key(tm)?'domani':fromKey(t.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}));
+    return 'Prossimo: '+when+' alle '+t.time;
+  }
+
+  function renderContacts(){
+    var q=$('csearch').value.trim().toLowerCase();
+    var list=contacts.filter(function(c){
+      return !q || c.name.toLowerCase().indexOf(q)>-1 || c.phone.indexOf(q)>-1 || (c.company||'').toLowerCase().indexOf(q)>-1;
+    }).sort(function(a,b){return a.name.localeCompare(b.name,'it');});
+    $('ccount').textContent=contacts.length===1?'1 persona':contacts.length+' persone';
+    $('clist').innerHTML=contacts.map(function(c){return '<option value="'+esc(c.name)+'"></option>';}).join('');
+    var h='', last='';
+    list.forEach(function(c){
+      var L=c.name.charAt(0).toUpperCase();
+      if(L!==last){last=L; h+='<div class="letter">'+esc(L)+'</div>';}
+      var nx=nextFor(c.name);
+      h+='<div class="contact" data-id="'+esc(c.id)+'">'
+        +'<div class="avatar" style="--h:'+hue(c.name)+'" aria-hidden="true">'+esc(initials(c.name))+'</div>'
+        +'<div class="cinfo" data-act="cedit" role="button" tabindex="0"><b>'+esc(c.name)+'</b>'
+        +(c.company?'<span>'+esc(c.company)+'</span>':'')
+        +'<span>'+esc(c.phone)+'</span>'
+        +(nx?'<span class="next">'+esc(nx)+'</span>':'')+'</div>'
+        +'<div class="cacts"><a class="act call" href="tel:'+esc(tel(c.phone))+'">'+ico('phone')+'Chiama</a>'
+        +'<a class="act wa" href="https://wa.me/'+waNum(c.phone)+'" target="_blank" rel="noopener">'+ico('chat')+'WhatsApp</a>'
+        +'<button class="act" data-act="ctask">'+ico('plus')+'Impegno</button></div></div>';
+    });
+    $('contacts').innerHTML=h;
+    $('cempty').hidden=list.length>0;
+  }
+
+  /* ---------- Schede ---------- */
+  var dT=$('dlg-task'), dC=$('dlg-contact');
+
+  function openTask(t,pre){
+    editT=t||null;
+    $('tt').textContent=t?'Modifica impegno':'Nuovo impegno';
+    $('t-title').value=t?t.title:'';
+    $('t-date').value=t?t.date:key(cur);
+    $('t-time').value=t?t.time:'09:00';
+    $('t-client').value=t?(t.client||''):(pre?pre.name:'');
+    $('t-phone').value=t?(t.phone||''):(pre?pre.phone:'');
+    $('t-notes').value=t?(t.notes||''):'';
+    var st=t?t.status:'Da Fare';
+    document.querySelectorAll('input[name="t-status"]').forEach(function(r){r.checked=(r.value===st);});
+    dT.showModal();
+    if(!t) $('t-title').focus();
+  }
+
+  function openContact(c){
+    editC=c||null;
+    $('ct').textContent=c?'Modifica contatto':'Nuovo contatto';
+    $('c-name').value=c?c.name:'';
+    $('c-phone').value=c?c.phone:'';
+    $('c-company').value=c?(c.company||''):'';
+    $('c-del').hidden=!c;
+    dC.showModal();
+    if(!c) $('c-name').focus();
+  }
+
+  $('form-task').addEventListener('submit',function(e){
+    e.preventDefault();
+    var st=document.querySelector('input[name="t-status"]:checked');
+    var data={
+      title:$('t-title').value.trim(), date:$('t-date').value, time:$('t-time').value,
+      client:$('t-client').value.trim(), phone:$('t-phone').value.trim(),
+      status:st?st.value:'Da Fare', notes:$('t-notes').value.trim()
+    };
+    if(!data.title||!data.date||!data.time) return;
+    if(editT){Object.assign(editT,data);}
+    else{tasks.push(Object.assign({id:Date.now().toString()},data));}
+    save(); dT.close();
+    cur=fromKey(data.date);
+    renderAgenda(); renderContacts();
+  });
+
+  $('form-contact').addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=$('c-name').value.trim(), phone=$('c-phone').value.trim(), company=$('c-company').value.trim();
+    if(!name||!phone) return;
+    if(editC){
+      var old=editC.name;
+      if(old!==name){tasks.forEach(function(t){if(t.client===old) t.client=name;});}
+      editC.name=name; editC.phone=phone; editC.company=company;
+    } else {
+      contacts.push({id:'c_'+Date.now(),name:name,phone:phone,company:company});
+    }
+    save(); dC.close(); renderContacts(); renderAgenda();
+  });
+
+  $('btn-select').addEventListener('click',function(){selMode=true; picked={}; renderAgenda();});
+  $('sel-cancel').addEventListener('click',function(){selMode=false; picked={}; renderAgenda();});
+  var dK=$('dlg-confirm'), askFn=null;
+  function ask(msg,label,fn){
+    $('k-msg').textContent=msg; $('k-ok').textContent=label; askFn=fn; dK.showModal();
+  }
+  $('k-ok').addEventListener('click',function(){var f=askFn; askFn=null; dK.close(); if(f) f();});
+  $('k-no').addEventListener('click',function(){askFn=null; dK.close();});
+  dK.addEventListener('click',function(e){if(e.target===dK){askFn=null; dK.close();}});
+
+  $('sel-del').addEventListener('click',function(){
+    var ids=Object.keys(picked);
+    if(!ids.length) return;
+    ask(ids.length===1?'Eliminare 1 impegno completato?':'Eliminare '+ids.length+' impegni completati?','Elimina',function(){
+      tasks=tasks.filter(function(t){return !picked[t.id];});
+      selMode=false; picked={};
+      save(); renderAgenda(); renderContacts();
+    });
+  });
+  $('c-del').addEventListener('click',function(){
+    if(!editC) return;
+    var target=editC;
+    ask('Eliminare "'+target.name+'" dalla rubrica?','Elimina',function(){
+      contacts=contacts.filter(function(c){return c!==target;});
+      save(); dC.close(); renderContacts();
+    });
+  });
+
+  $('t-client').addEventListener('input',function(){
+    var v=this.value.trim().toLowerCase();
+    var c=contacts.filter(function(x){return x.name.toLowerCase()===v;})[0];
+    if(c && !$('t-phone').value) $('t-phone').value=c.phone;
+  });
+
+  [dT,dC].forEach(function(d){
+    d.addEventListener('click',function(e){if(e.target===d) d.close();});
+    d.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',function(){d.close();});});
+  });
+
+  /* ---------- Eventi ---------- */
+  function activate(e){
+    var b=e.target.closest('[data-act]'); if(!b) return;
+    var row=b.closest('[data-id]'); if(!row) return;
+    var id=row.getAttribute('data-id'), act=b.getAttribute('data-act');
+    if(selMode && (act==='toggle'||act==='edit'||act==='pick')){
+      var ts=find(tasks,id);
+      if(ts && ts.status==='Completato'){
+        if(picked[id]) delete picked[id]; else picked[id]=1;
+        renderAgenda();
+      }
+      return;
+    }
+    if(act==='toggle'){
+      var t=find(tasks,id); if(!t) return;
+      t.status=(t.status==='Completato')?'Da Fare':'Completato';
+      save(); renderAgenda(); renderContacts();
+    } else if(act==='edit'){
+      var t2=find(tasks,id); if(t2) openTask(t2);
+    } else if(act==='cedit'){
+      var c=find(contacts,id); if(c) openContact(c);
+    } else if(act==='ctask'){
+      var c2=find(contacts,id); if(c2){switchTab('agenda'); openTask(null,{name:c2.name,phone:c2.phone});}
+    }
+  }
+  function keyAct(e){
+    if((e.key==='Enter'||e.key===' ') && e.target.getAttribute('role')==='button'){e.preventDefault(); activate(e);}
+  }
+  $('tasks').addEventListener('click',activate);
+  $('tasks').addEventListener('keydown',keyAct);
+  $('contacts').addEventListener('click',activate);
+  $('contacts').addEventListener('keydown',keyAct);
+
+  $('week').addEventListener('click',function(e){
+    var b=e.target.closest('[data-date]'); if(!b) return;
+    cur=fromKey(b.getAttribute('data-date')); renderAgenda();
+  });
+  $('wk-prev').addEventListener('click',function(){changeDate(-7);});
+  $('wk-next').addEventListener('click',function(){changeDate(7);});
+  $('btn-today').addEventListener('click',function(){cur=new Date(); cur.setHours(0,0,0,0); renderAgenda();});
+  $('btn-move').addEventListener('click',function(){
+    var tk=key(new Date());
+    tasks.forEach(function(t){if(t.date<tk && t.status!=='Completato') t.date=tk;});
+    save(); renderAgenda(); renderContacts();
+  });
+  $('csearch').addEventListener('input',renderContacts);
+
+  document.querySelectorAll('[data-new]').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(b.getAttribute('data-new')==='task') openTask(null); else openContact(null);
+    });
+  });
+
+  // Scorri a destra o a sinistra per cambiare giorno
+  var sx=0, sy=0, ag=$('tab-agenda');
+  ag.addEventListener('touchstart',function(e){sx=e.touches[0].clientX; sy=e.touches[0].clientY;},{passive:true});
+  ag.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>70 && Math.abs(dy)<45) changeDate(dx<0?1:-1);
+  },{passive:true});
+
+  /* ---------- Schede principali ---------- */
+  function switchTab(t){
+    tab=t; selMode=false; picked={};
+    $('tab-agenda').hidden=(t!=='agenda');
+    $('tab-contacts').hidden=(t!=='contacts');
+    $('nav-agenda').setAttribute('aria-current',t==='agenda'?'page':'false');
+    $('nav-contacts').setAttribute('aria-current',t==='contacts'?'page':'false');
+    $('nav-add').setAttribute('aria-label',t==='agenda'?'Nuovo impegno':'Nuovo contatto');
+    $('add-label').textContent='Nuovo';
+    window.scrollTo(0,0);
+    if(t==='agenda') renderAgenda(); else renderContacts();
+    syncSel();
+  }
+  $('nav-agenda').addEventListener('click',function(){switchTab('agenda');});
+  $('nav-contacts').addEventListener('click',function(){switchTab('contacts');});
+  $('nav-add').addEventListener('click',function(){if(tab==='agenda') openTask(null); else openContact(null);});
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden){if(tab==='agenda') renderAgenda(); else renderContacts();}
+  });
+
+  /* ---------- Icona per la schermata Home ---------- */
+  try{
+    var cv=document.createElement('canvas'); cv.width=cv.height=180;
+    var x=cv.getContext('2d');
+    x.fillStyle='#0369a1'; x.fillRect(0,0,180,180);
+    x.strokeStyle='#ffffff'; x.lineWidth=14; x.lineCap='round'; x.lineJoin='round';
+    x.strokeRect(38,48,104,94);
+    x.beginPath(); x.moveTo(38,76); x.lineTo(142,76); x.moveTo(64,34); x.lineTo(64,56); x.moveTo(116,34); x.lineTo(116,56); x.stroke();
+    x.beginPath(); x.moveTo(66,110); x.lineTo(84,126); x.lineTo(114,96); x.stroke();
+    var url=cv.toDataURL('image/png');
+    $('touch-icon').href=url;
+    var man={name:'Chi e Cosa - Agenda Semplice',short_name:'Chi e Cosa',display:'standalone',
+      background_color:'#f0f7ff',theme_color:'#0369a1',start_url:location.href,
+      icons:[{src:url,sizes:'180x180',type:'image/png'}]};
+    var l=document.createElement('link'); l.rel='manifest';
+    l.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));
+    document.head.appendChild(l);
+  }catch(e){}
+
+  renderAgenda(); renderContacts();
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registrato con successo!', reg))
+        .catch(err => console.log('Registrazione fallita: ', err));
+    });
+  }
+</script>
+</body>
+</html>
